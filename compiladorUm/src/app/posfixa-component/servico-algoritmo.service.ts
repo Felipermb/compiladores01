@@ -8,47 +8,65 @@ export class ServicoAlgoritmoService {
   ponto: boolean;
 
   analiseLexica(expressao: string){
-    var p = this.percorrerExpressao(expressao);
-    this.imprimirMensagemLog(p);
-    return p;
+      var p = this.percorrerExpressao(expressao);
+      return p;
   }
 
   percorrerExpressao(mensagem: string){
     this.inicializa();
+    var contadora = 0;
+
     for (var char of mensagem) {
         var caractere:string = char;
         switch(caractere) {
-           case simbolosConstantes.parAbrir: {
+            case simbolosConstantes.parAbrir: {
+              // if(contadora >= 1){
+              //   this.operador(simbolosConstantes.concatena);
+              //   contadora = 0 ;
+              // }
               this.parenteseAbrir();
+
               break;
            }
            case simbolosConstantes.parFechar: {
               this.parenteseFechar();
+
               break;
            }
            case simbolosConstantes.concatena: {
-              this.operador(caractere);
+              // this.operador(caractere);
+              // if(contadora >= 1){
+              //   contadora = 0 ;
+              // }
               break;
            }
            case simbolosConstantes.kleen: {
              this.operador(caractere);
+            //  if(contadora >= 1){
+            //     contadora = 0 ;
+            //   }
              break;
            }
            case simbolosConstantes.ou: {
              this.operador(caractere);
+            //  if(contadora >= 1){
+            //     contadora = 0 ;
+            //   }
              break;
            }
            default: {
-              // if(this.ponto){
-              //   this.ponto = !this.ponto;
+              // if(contadora >= 1){
+              //   this.operador(simbolosConstantes.concatena);
+              //   contadora = 0;
               // }else{
-              //   this.posfixa.push(simbolosConstantes.concatena);
+              //   contadora++;
               // }
+              // contadora++;
               this.operando(caractere);
               break;
            }
         }
-    }
+    } // fim do for
     this.desempilhamentoFinal();
     var aux = '';
     for(var char of this.posfixa){
@@ -133,6 +151,62 @@ export class ServicoAlgoritmoService {
   imprimirMensagemLog(mensagem: string){
     console.log(mensagem);
   }
+
+
+  verificarExpressao(mensagem: string){
+      this.inicializa();
+
+      for (var char of mensagem) {
+         var caractere:string = char;
+         switch(caractere) {
+           case simbolosConstantes.concatena: {
+               if(this.pilha != null){
+                  var op2 = this.pilha.shift();
+
+                  if(this.pilha != null){
+                      var op1 = this.pilha.shift();
+
+                      this.pilha.push('op2');
+                  }
+              }
+              break;
+           }
+           case simbolosConstantes.kleen: {
+             if(this.pilha != null){
+                var op2 = this.pilha.shift();
+                this.pilha.push('op2');
+              }
+             break;
+           }
+           case simbolosConstantes.ou: {
+             if(this.pilha != null){
+                var op2 = this.pilha.shift();
+
+                if(this.pilha != null){
+                    var op1 = this.pilha.shift();
+
+                    this.pilha.push('op2');
+                }
+              }
+             break;
+           }
+           default: {
+              this.pilha.push(caractere);
+              break;
+           }
+        }
+      }
+
+      return this.resultadoVerificacao(this.pilha);
+
+    }
+
+    resultadoVerificacao(pilhaTeste){
+      pilhaTeste.shift();
+      return pilhaTeste.length == 0;
+    }
+
+
 }
 
 class simbolosConstantes {
@@ -142,6 +216,12 @@ class simbolosConstantes {
   static parAbrir = "(";
   static parFechar = ")";
 }
+
+
+
+
+
+
 
 /*1. Varrer a expressão caractere por caractere da esquerda para
 a direita:
