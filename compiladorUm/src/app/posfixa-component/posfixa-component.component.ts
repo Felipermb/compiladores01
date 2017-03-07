@@ -16,6 +16,7 @@ export class PosfixaComponentComponent implements OnInit {
   }
 
   posfixa: any;
+  validade: any;
   verificacao: any;
 
   converterInfixa(expressao: string){
@@ -25,11 +26,11 @@ export class PosfixaComponentComponent implements OnInit {
 
       this.verificacao = this.algoritmo.verificarExpressao(this.posfixa); //Campo Booleano
 
-      if(this.verificacao){
-
-      }else{
-        alert("Expressão Inválida");
-      }
+       if(this.verificacao){
+         this.validade = " Expressão Válida";
+       }else{
+         this.validade = " Expressão Inválida";
+       }
 
     }
   }

@@ -6,6 +6,7 @@ export class ServicoAlgoritmoService {
   posfixa: string[];
   pilha: string[];
   ponto: boolean;
+  parentese;
 
   analiseLexica(expressao: string){
       var p = this.percorrerExpressao(expressao);
@@ -20,48 +21,38 @@ export class ServicoAlgoritmoService {
         var caractere:string = char;
         switch(caractere) {
             case simbolosConstantes.parAbrir: {
-              // if(contadora >= 1){
-              //   this.operador(simbolosConstantes.concatena);
-              //   contadora = 0 ;
-              // }
+              if(this.ponto){
+                this.operador(simbolosConstantes.concatena);
+                this.ponto = false;
+              }
               this.parenteseAbrir();
-
               break;
            }
            case simbolosConstantes.parFechar: {
+              this.ponto = true;
               this.parenteseFechar();
-
               break;
            }
            case simbolosConstantes.concatena: {
-              // this.operador(caractere);
-              // if(contadora >= 1){
-              //   contadora = 0 ;
-              // }
+              this.ponto = false;
+              this.operador(caractere);
               break;
            }
            case simbolosConstantes.kleen: {
+             this.ponto = true;
              this.operador(caractere);
-            //  if(contadora >= 1){
-            //     contadora = 0 ;
-            //   }
              break;
            }
            case simbolosConstantes.ou: {
+             this.ponto = false;
              this.operador(caractere);
-            //  if(contadora >= 1){
-            //     contadora = 0 ;
-            //   }
              break;
            }
            default: {
-              // if(contadora >= 1){
-              //   this.operador(simbolosConstantes.concatena);
-              //   contadora = 0;
-              // }else{
-              //   contadora++;
-              // }
-              // contadora++;
+              if(this.ponto){
+                  this.operador(simbolosConstantes.concatena);
+              }
+              this.ponto = true;
               this.operando(caractere);
               break;
            }
@@ -78,26 +69,30 @@ export class ServicoAlgoritmoService {
   inicializa(){
     this.posfixa = [];
     this.pilha = [];
-    this.ponto = true;
+    this.parentese = 0;
+    this.ponto = false;
   }
 
   operando(caractere: string){
     this.posfixa.push(caractere);
-    //this.imprimirMensagemLog("Operando");
   }
 
   parenteseAbrir(){
     this.empilhar(simbolosConstantes.parAbrir);
-    //this.imprimirMensagemLog("Parentese Abrir");
+    this.parentese++;
   }
 
   parenteseFechar(){
     var aux = this.desempilhar();
-    while(aux != simbolosConstantes.parAbrir || aux == null){
-      this.posfixa.push(aux);
-      aux = this.desempilhar();
+    if(this.parentese > 0){
+       while(aux != simbolosConstantes.parAbrir && this.pilha.length > 0){
+          this.posfixa.push(aux);
+          aux = this.desempilhar();
+        }
+        this.parentese--;
+    }else{
+        this.posfixa.push(simbolosConstantes.parFechar);
     }
-    //this.imprimirMensagemLog("Parentese Fechar");
   }
 
   operador(operador: string){
@@ -115,7 +110,6 @@ export class ServicoAlgoritmoService {
       }
     }
     this.empilhar(operador);
-    //this.imprimirMensagemLog("Operador");
   }
 
   empilhar(caractere: string){
@@ -152,61 +146,55 @@ export class ServicoAlgoritmoService {
     console.log(mensagem);
   }
 
-
   verificarExpressao(mensagem: string){
       this.inicializa();
-
       for (var char of mensagem) {
          var caractere:string = char;
          switch(caractere) {
            case simbolosConstantes.concatena: {
-               if(this.pilha != null){
+               if(this.pilha.length > 0){
                   var op2 = this.pilha.shift();
-
-                  if(this.pilha != null){
+                  if(this.pilha.length > 0){
                       var op1 = this.pilha.shift();
-
-                      this.pilha.push('op2');
+                      this.pilha.unshift(op2);
                   }
               }
               break;
            }
            case simbolosConstantes.kleen: {
-             if(this.pilha != null){
+             if(this.pilha.length > 0){
                 var op2 = this.pilha.shift();
-                this.pilha.push('op2');
+                this.pilha.unshift(op2);
               }
              break;
            }
            case simbolosConstantes.ou: {
-             if(this.pilha != null){
+             if(this.pilha.length > 0){
                 var op2 = this.pilha.shift();
-
-                if(this.pilha != null){
+                if(this.pilha.length > 0){
                     var op1 = this.pilha.shift();
-
-                    this.pilha.push('op2');
+                    this.pilha.unshift(op2);
                 }
               }
              break;
            }
+           case simbolosConstantes.parAbrir: {
+             this.parentese++;
+             break;
+           }
+           case simbolosConstantes.parFechar: {
+             this.parentese--;
+             if(this.parentese < 0) return false;
+             break;
+           }
            default: {
-              this.pilha.push(caractere);
+              this.pilha.unshift(caractere);
               break;
            }
         }
       }
-
-      return this.resultadoVerificacao(this.pilha);
-
+      return this.pilha.length-1 == 0;
     }
-
-    resultadoVerificacao(pilhaTeste){
-      pilhaTeste.shift();
-      return pilhaTeste.length == 0;
-    }
-
-
 }
 
 class simbolosConstantes {
@@ -216,12 +204,6 @@ class simbolosConstantes {
   static parAbrir = "(";
   static parFechar = ")";
 }
-
-
-
-
-
-
 
 /*1. Varrer a expressão caractere por caractere da esquerda para
 a direita:
